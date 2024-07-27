@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "start:dev": " cross-env NODE_ENV=development nodemon src/index.js",
-    "test": "mocha tests/test-setup.js  './src/tests/**/*.test.js' --exit"
+    "test": "cross-env mocha --recursive --exit"
   },
   "author": "Emmanuel Ibekwe",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-mongo-sanitize": "^2.2.0",
+    "google-auth-library": "^9.11.0",
     "helmet": "^7.1.0",
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
