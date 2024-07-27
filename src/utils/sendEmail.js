@@ -85,7 +85,7 @@ const sendEmail = async emailOption => {
   }
 };
 
-module.exports = sendEmail;
+module.exports = { sendEmail };
 
 // sendEmail({
 //   to: "emmanuelibekwe7@gmail.com",
