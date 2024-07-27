@@ -2,25 +2,33 @@ const { createUser, signInUser } = require("./../services/auth.js");
 const { generateToken, verifyToken } = require("./../services/token.js");
 const createHttpError = require("http-errors");
 const User = require("./../models/user.js");
-const sendEmail = require("./../utils/sendEmail.js");
+const { sendEmail } = require("./../utils/sendEmail.js");
 const PasswordResetCode = require("./../models/PasswordResetCode.js");
 const bcryptjs = require("bcryptjs");
 const { isPasswordFalse } = require("../utils/validation.js");
-const { getRandomSixDigit } = require("./../utils/auth.js");
+const { getRandomSixDigit, generatePassword } = require("./../utils/auth.js");
 const dotenv = require("dotenv");
+const { OAuth2Client } = require("google-auth-library");
 
 dotenv.config();
-const { ADMIN_EMAIL } = process.env;
+
+const {
+  ADMIN_EMAIL,
+  FRONT_END_TESTING_DOMAIN,
+  FRONT_END_PRODUCTION_DOMAIN
+} = process.env;
 
 const signup = async (req, res, next) => {
   try {
     const { name, email, password, picture } = req.body;
+    console.log("req.body", { name, email, password, picture });
     const newUser = await createUser({
       name,
       email,
       password,
       picture
     });
+    console.log("newUser", newUser);
 
     const accessToken = await generateToken(
       {
@@ -30,6 +38,7 @@ const signup = async (req, res, next) => {
       "1d",
       process.env.ACCESS_TOKEN_SECRET
     );
+    console.log("accessToken", accessToken);
 
     const refreshToken = await generateToken(
       {
@@ -48,6 +57,8 @@ const signup = async (req, res, next) => {
       type: "sign up"
     });
 
+    console.log("email sent");
+
     res.status(201).json({
       message: "sign up successful",
       accessToken,
@@ -59,6 +70,8 @@ const signup = async (req, res, next) => {
         picture: newUser.picture
       }
     });
+
+    console.log("json sent");
   } catch (error) {
     if (!error.status) {
       error.status = 500;
@@ -288,6 +301,66 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const googleSignIn = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      throw createHttpError.BadRequest("Token not provided.");
+    }
+    const client = new OAuth2Client(process.env.OAUTH_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.OAUTH_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
+    let user = await User.findOne({ email: email });
+    if (!user) {
+      user = await createUser({
+        name,
+        picture,
+        email,
+        password: generatePassword()
+      });
+    }
+
+    const accessToken = await generateToken(
+      {
+        userId: user._id.toString(),
+        email: user.email
+      },
+      "1d",
+      process.env.ACCESS_TOKEN_SECRET
+    );
+
+    const refreshToken = await generateToken(
+      {
+        userId: user._id.toString(),
+        email: user.email
+      },
+      "30d",
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    res.status(201).json({
+      message: "login successful",
+      accessToken,
+      refreshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture
+      }
+    });
+  } catch (error) {
+    if (!error.status) {
+      error.status = 500;
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -295,5 +368,6 @@ module.exports = {
   refreshAccessToken,
   sendResetPasswordEmail,
   validateResetCode,
-  resetPassword
+  resetPassword,
+  googleSignIn
 };
