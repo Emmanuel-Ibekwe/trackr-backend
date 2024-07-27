@@ -5,15 +5,14 @@ const User = require("../models/user.js");
 const validation = require("./../utils/validation.js");
 const { isPasswordFalse } = validation;
 
-const DEFAULT_PICTURE_URL =
-  "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png";
-
 const createUser = async userData => {
   const { name, email, password, picture } = userData;
+  // console.log("userData", userData);
   if (!name || !email || !password) {
     throw createHttpError.BadRequest("Please fill all fields");
   }
 
+  // console.log("name", name);
   if (!validator.isEmail(email)) {
     throw createHttpError.BadRequest("email is invalid");
   }
@@ -31,14 +30,14 @@ const createUser = async userData => {
   }
 
   const hashedPassword = await bcryptjs.hash(password, 12);
-
+  // console.log("hashedPassword", hashedPassword);
   const user = await new User({
     name,
     email,
     password: hashedPassword,
     picture: picture || DEFAULT_PICTURE_URL
   });
-
+  console.log("second to last line in createUser");
   return user.save();
 };
 
@@ -70,7 +69,19 @@ const signInUser = async userData => {
   return user;
 };
 
+async function getUserData(access_token) {
+  const response = await fetch(
+    `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`
+  );
+
+  //console.log('response',response);
+  const data = await response.json();
+  // console.log("data", data);
+  return data;
+}
+
 module.exports = {
   createUser,
-  signInUser
+  signInUser,
+  getUserData
 };
