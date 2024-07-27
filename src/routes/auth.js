@@ -6,7 +6,9 @@ const {
   refreshAccessToken,
   resetPassword,
   validateResetCode,
-  sendResetPasswordEmail
+  sendResetPasswordEmail,
+  googleSignIn,
+  googleOauth
 } = require("./../controllers/auth.js");
 
 const router = express.Router();
@@ -18,5 +20,6 @@ router.post("/token", refreshAccessToken);
 router.post("/send-reset-email", sendResetPasswordEmail);
 router.post("/validate-reset-code", validateResetCode);
 router.post("/reset-password", resetPassword);
+router.post("/google-sign-in", googleSignIn);
 
 module.exports = router;
