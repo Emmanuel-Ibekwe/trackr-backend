@@ -1,6 +1,8 @@
 const express = require("express");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const swaggerJSDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 const createHttpError = require("http-errors");
 const expressMongoSanitize = require("express-mongo-sanitize");
 const compression = require("compression");
@@ -38,11 +40,44 @@ app.use(
   })
 );
 
+const swaggerDefinition = {
+  openapi: "3.0.0",
+  info: {
+    title: "Express API for Trackr webapp backend.",
+    version: "1.0.0",
+    description:
+      "This is a REST API application made with Express. It retrieves data from Trackr webapp backend.",
+    license: {
+      name: "Licensed Under MIT",
+      url: "https://spdx.org/licenses/MIT.html"
+    },
+    contact: {
+      name: "Emmanuel Ibekwe",
+      email: "ibekweemmanuel007@gmail.com"
+    }
+  },
+  servers: [
+    {
+      url: "http://localhost:8000/api/v1",
+      description: "Development server"
+    }
+  ]
+};
+
+const options = {
+  swaggerDefinition,
+  // Paths to files containing OpenAPI definitions
+  apis: ["./src/routes/**.js"]
+};
+
+const swaggerSpec = swaggerJSDoc(options);
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/", taskRoutes);
 app.use("/api/v1/", reviewRoutes);
 app.use("/api/v1/", entryRoutes);
 app.use("/api/v1/admin/", adminRoutes);
+app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(async (req, res, next) => {
   next(createHttpError.NotFound("This route does not exist."));
