@@ -25,7 +25,7 @@ const addDailyEntry = async (req, res, next) => {
 
     const task = await Task.findById(taskId);
     if (!task) {
-      throw createHttpError.BadRequest("Task do not exists.");
+      throw createHttpError.NotFound("Task do not exists.");
     }
 
     if (userId !== task.userId.toString()) {
@@ -224,18 +224,18 @@ const editDailyEntry = async (req, res, next) => {
 
     const task = await Task.findById(taskId);
     if (!task) {
-      throw createHttpError.BadRequest("Task do not exists.");
+      throw createHttpError.NotFound("Task do not exists.");
     }
 
     if (userId !== task.userId.toString()) {
       throw createHttpError.Unauthorized(
-        "User is not authorized to add entries in this task."
+        "User is not authorized to edit entries of this task."
       );
     }
 
     const typeLowerCase = type.toLowerCase();
     if (task.type !== typeLowerCase) {
-      throw createHttpError.BadRequest(
+      throw createHttpError.Conflict(
         "The task type do not match the type sent."
       );
     }
@@ -243,7 +243,7 @@ const editDailyEntry = async (req, res, next) => {
     if (typeLowerCase === "boolean") {
       const booleanEntry = await BooleanEntry.findById(entryId);
       if (!booleanEntry) {
-        throw createHttpError.BadRequest("Entry does not exists.");
+        throw createHttpError.NotFound("Entry does not exists.");
       }
 
       if (!AreSameDates(booleanEntry.date, date)) {
@@ -312,10 +312,14 @@ const editDailyEntry = async (req, res, next) => {
   }
 };
 
+const ITEMS_PER_PAGE = 3;
+
 const getEntries = async (req, res, next) => {
   try {
     const { taskId } = req.params;
+    const page = +req.query.page || 1;
     const { userId } = req.user;
+    let totalItems;
 
     if (!taskId) {
       throw createHttpError.BadRequest("taskId not provided");
@@ -329,32 +333,56 @@ const getEntries = async (req, res, next) => {
 
     if (userId !== task.userId.toString()) {
       throw createHttpError.Unauthorized(
-        "User is not authorized to add entries in this task."
+        "User is not authorized to get entries of this task."
       );
     }
 
     const type = task.type;
 
     if (type === "boolean") {
-      const entries = await BooleanEntry.find({ taskId: taskId }).sort({
-        date: 1
-      });
-      return res.status(200).json(entries);
+      const entries = await BooleanEntry.find({ taskId: taskId })
+        .countDocuments()
+        .then(numOfDocuments => {
+          totalItems = numOfDocuments;
+          return BooleanEntry.find({ taskId: taskId })
+            .sort({ date: 1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+        });
+      return res.status(200).json({ entries, totalItems });
     } else if (type === "minutes") {
-      const entries = await MinutesEntry.find({ taskId: taskId }).sort({
-        date: 1
-      });
-      return res.status(200).json(entries);
+      const entries = await MinutesEntry.find({ taskId: taskId })
+        .countDocuments()
+        .then(numOfDocuments => {
+          totalItems = numOfDocuments;
+          return MinutesEntry.find({ taskId: taskId })
+            .sort({ date: 1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+        });
+      return res.status(200).json({ entries, totalItems });
     } else if (type === "number") {
-      const entries = await NumberEntry.find({ taskId: taskId }).sort({
-        date: 1
-      });
-      return res.status(200).json(entries);
+      const entries = await NumberEntry.find({ taskId: taskId })
+        .countDocuments()
+        .then(numOfDocuments => {
+          totalItems = numOfDocuments;
+          return NumberEntry.find({ taskId: taskId })
+            .sort({ date: 1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+        });
+      return res.status(200).json({ entries, totalItems });
     } else if (type === "time") {
-      const entries = await TimeEntry.find({ taskId: taskId }).sort({
-        date: 1
-      });
-      return res.status(200).json(entries);
+      const entries = await TimeEntry.find({ taskId: taskId })
+        .countDocuments()
+        .then(numOfDocuments => {
+          totalItems = numOfDocuments;
+          return TimeEntry.find({ taskId: taskId })
+            .sort({ date: 1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+        });
+      return res.status(200).json({ entries, totalItems });
     }
   } catch (error) {
     if (!error.status) {
@@ -376,7 +404,7 @@ const clearEntries = async (req, res, next) => {
 
     if (userId !== task.userId.toString()) {
       throw createHttpError.Unauthorized(
-        "User is not authorized to add entries in this task."
+        "User is not authorized to delete entries of this task."
       );
     }
     const type = task.type;
@@ -384,30 +412,22 @@ const clearEntries = async (req, res, next) => {
       const result = await BooleanEntry.deleteMany({ taskId: taskId });
       task.dateOfLastTaskEntry = null;
       const updatedTask = await task.save();
-      res
-        .status(204)
-        .json({ message: "Entries deleted successfully", task: updatedTask });
+      res.status(204).json({});
     } else if (type === "minutes") {
       const result = await MinutesEntry.deleteMany({ taskId: taskId });
       task.dateOfLastTaskEntry = null;
       const updatedTask = await task.save();
-      res
-        .status(204)
-        .json({ message: "Entries deleted successfully", task: updatedTask });
+      res.status(204).json({});
     } else if (type === "number") {
       const result = await NumberEntry.deleteMany({ taskId: taskId });
       task.dateOfLastTaskEntry = null;
       const updatedTask = await task.save();
-      res
-        .status(204)
-        .json({ message: "Entries deleted successfully", task: updatedTask });
+      res.status(204).json({});
     } else if (type === "time") {
       const result = await TimeEntry.deleteMany({ taskId: taskId });
       task.dateOfLastTaskEntry = null;
       const updatedTask = await task.save();
-      res
-        .status(204)
-        .json({ message: "Entries deleted successfully", task: updatedTask });
+      res.status(204).json({});
     }
   } catch (error) {
     if (!error.status) {
@@ -436,7 +456,7 @@ const deleteEntry = async (req, res, next) => {
 
     if (userId !== task.userId.toString()) {
       throw createHttpError.Unauthorized(
-        "User is not authorized to add entries in this task."
+        "User is not authorized to delete entries of this task."
       );
     }
     const type = task.type;
@@ -445,7 +465,7 @@ const deleteEntry = async (req, res, next) => {
       const booleanEntry = await BooleanEntry.findOne().sort({ date: -1 });
 
       if (!booleanEntry) {
-        throw createHttpError.BadRequest("entry to be deleted not found");
+        throw createHttpError.NotFound("entry to be deleted not found");
       }
 
       if (booleanEntry._id.toString() !== entryId) {
@@ -466,10 +486,7 @@ const deleteEntry = async (req, res, next) => {
         ? new Date(currentLastEntry.date)
         : null;
       const updatedTask = await task.save();
-      res.status(200).json({
-        task: updatedTask,
-        message: "Entry deleted successfully."
-      });
+      res.status(204).json({});
     } else if (type === "minutes") {
       const minutesEntry = await MinutesEntry.findOne().sort({ date: -1 });
 
@@ -496,10 +513,7 @@ const deleteEntry = async (req, res, next) => {
         ? new Date(currentLastEntry.date)
         : null;
       const updatedTask = await task.save();
-      res.status(200).json({
-        task: updatedTask,
-        message: "Entry deleted successfully."
-      });
+      res.status(204).json({});
     } else if (type === "number") {
       const numberEntry = await NumberEntry.findOne().sort({ date: -1 });
 
@@ -526,10 +540,7 @@ const deleteEntry = async (req, res, next) => {
         ? new Date(currentLastEntry.date)
         : null;
       const updatedTask = await task.save();
-      res.status(200).json({
-        task: updatedTask,
-        message: "Entry deleted successfully."
-      });
+      res.status(204).json({});
     } else if (type === "time") {
       const timeEntry = await TimeEntry.findOne().sort({ date: -1 });
 
@@ -556,10 +567,7 @@ const deleteEntry = async (req, res, next) => {
         ? new Date(currentLastEntry.date)
         : null;
       const updatedTask = await task.save();
-      res.status(200).json({
-        task: updatedTask,
-        message: "Entry deleted successfully."
-      });
+      res.status(204).json({});
     }
   } catch (error) {
     if (!error.status) {
