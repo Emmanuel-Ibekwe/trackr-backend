@@ -11,10 +11,10 @@ const {
   getNumberEntriesWeeklyReviewData,
   getMinutesEntriesWeeklyReviewData,
   getTimeEntriesWeeklyReviewData,
-  getBooleanEntriesMonthlyReviewData,
-  getMinutesEntriesMonthlyReviewData,
-  getNumberEntriesMonthlyReviewData,
-  getTimeEntriesMonthlyReviewData
+  getBooleanEntriesCustomReviewData,
+  getMinutesEntriesCustomReviewData,
+  getNumberEntriesCustomReviewData,
+  getTimeEntriesCustomReviewData
 } = require("./../services/review.js");
 
 const getWeeklyReview = async (req, res, next) => {
@@ -26,6 +26,7 @@ const getWeeklyReview = async (req, res, next) => {
     if (!taskId) {
       throw createHttpError.BadRequest("taskId missing");
     }
+
     if (!date) {
       throw createHttpError.BadRequest("date query missing");
     }
@@ -123,7 +124,7 @@ const getMonthlyReview = async (req, res, next) => {
     const type = task.type;
 
     if (type === "boolean") {
-      const reviewData = await getBooleanEntriesMonthlyReviewData(
+      const reviewData = await getBooleanEntriesCustomReviewData(
         task,
         taskId,
         monthBoundaries
@@ -131,7 +132,7 @@ const getMonthlyReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "minutes") {
-      const reviewData = await getMinutesEntriesMonthlyReviewData(
+      const reviewData = await getMinutesEntriesCustomReviewData(
         task,
         taskId,
         monthBoundaries
@@ -139,7 +140,7 @@ const getMonthlyReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "number") {
-      const reviewData = await getNumberEntriesMonthlyReviewData(
+      const reviewData = await getNumberEntriesCustomReviewData(
         task,
         taskId,
         monthBoundaries
@@ -147,7 +148,7 @@ const getMonthlyReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "time") {
-      const reviewData = await getTimeEntriesMonthlyReviewData(
+      const reviewData = await getTimeEntriesCustomReviewData(
         task,
         taskId,
         monthBoundaries
@@ -177,7 +178,7 @@ const getCustomReview = async (req, res, next) => {
 
     // checks if date is ISO string format
     if (!isISODateString(startingDate) || !isISODateString(stopDate)) {
-      throw createHttpError.BadRequest("date not in ISO string format.");
+      throw createHttpError.BadRequest("dates not in ISO string format.");
     }
 
     const dateBoundaries = { firstDay: startingDate, lastDay: stopDate };
@@ -197,7 +198,7 @@ const getCustomReview = async (req, res, next) => {
     const type = task.type;
 
     if (type === "boolean") {
-      const reviewData = await getBooleanEntriesMonthlyReviewData(
+      const reviewData = await getBooleanEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -205,7 +206,7 @@ const getCustomReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "minutes") {
-      const reviewData = await getMinutesEntriesMonthlyReviewData(
+      const reviewData = await getMinutesEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -213,7 +214,7 @@ const getCustomReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "number") {
-      const reviewData = await getNumberEntriesMonthlyReviewData(
+      const reviewData = await getNumberEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -221,7 +222,7 @@ const getCustomReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "time") {
-      const reviewData = await getTimeEntriesMonthlyReviewData(
+      const reviewData = await getTimeEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -265,7 +266,7 @@ const getOverallReview = async (req, res, next) => {
     const type = task.type;
 
     if (type === "boolean") {
-      const reviewData = await getBooleanEntriesMonthlyReviewData(
+      const reviewData = await getBooleanEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -273,7 +274,7 @@ const getOverallReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "minutes") {
-      const reviewData = await getMinutesEntriesMonthlyReviewData(
+      const reviewData = await getMinutesEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -281,7 +282,7 @@ const getOverallReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "number") {
-      const reviewData = await getNumberEntriesMonthlyReviewData(
+      const reviewData = await getNumberEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
@@ -289,7 +290,7 @@ const getOverallReview = async (req, res, next) => {
 
       res.status(200).json(reviewData);
     } else if (type === "time") {
-      const reviewData = await getTimeEntriesMonthlyReviewData(
+      const reviewData = await getTimeEntriesCustomReviewData(
         task,
         taskId,
         dateBoundaries
