@@ -34,7 +34,9 @@ const getBooleanEntriesWeeklyReviewData = async (
   const workDayEntries = entries.filter(el => !el.isBreakDay);
   const successDayEntries = entries.filter(el => !el.isBreakDay && el.value);
   const weeklyCummulative = successDayEntries.length;
-  const idealCummalative = workDayEntries.length;
+  const idealCummulative = workDayEntries.length;
+  let score = (weeklyCummulative / idealCummulative) * 100;
+  score = Number(score.toFixed(1));
 
   return {
     firstDayOfWeek: weekBoundaries.sunday,
@@ -46,22 +48,23 @@ const getBooleanEntriesWeeklyReviewData = async (
     highestValue: null,
     workDayEntries,
     weeklyCummulative,
-    idealCummalative,
+    idealCummulative,
     idealValue: task.idealValue,
-    unit: task.unit
+    unit: task.unit,
+    score
   };
 };
 
-const getBooleanEntriesMonthlyReviewData = async (
+const getBooleanEntriesCustomReviewData = async (
   task,
   taskId,
-  monthBoundaries
+  dateBoundaries
 ) => {
   const entries = await BooleanEntry.find({
     taskId,
     date: {
-      $gte: new Date(monthBoundaries.firstDay),
-      $lte: new Date(monthBoundaries.lastDay)
+      $gte: new Date(dateBoundaries.firstDay),
+      $lte: new Date(dateBoundaries.lastDay)
     }
   }).sort({ date: 1 });
   if (entries.length === 0) {
@@ -70,22 +73,25 @@ const getBooleanEntriesMonthlyReviewData = async (
   const breakDayEntries = entries.filter(el => el.isBreakDay);
   const workDayEntries = entries.filter(el => !el.isBreakDay);
   const successDayEntries = entries.filter(el => !el.isBreakDay && el.value);
-  const monthlyCummulative = successDayEntries.length;
-  const idealCummalative = workDayEntries.length;
+  const cummulative = successDayEntries.length;
+  const idealCummulative = workDayEntries.length;
+  let score = (cummulative / idealCummulative) * 100;
+  score = Number(score.toFixed(1));
 
   return {
-    firstDayOfMonth: monthBoundaries.firstDay,
+    firstDayOfMonth: dateBoundaries.firstDay,
     entries,
     breakDaysEntriesLength: breakDayEntries.length,
     breakDays: task.breakDays,
-    monthlyAverage: null,
+    averageValue: null,
     lowestValue: null,
     highestValue: null,
     workDayEntries,
-    monthlyCummulative,
-    idealCummalative,
+    cummulative,
+    idealCummulative,
     idealValue: task.idealValue,
-    unit: task.unit
+    unit: task.unit,
+    score
   };
 };
 
@@ -115,6 +121,8 @@ const getNumberEntriesWeeklyReviewData = async (
   const idealCummulative = task.idealValue * workDayEntries.length;
   const lowestValue = Math.min(...workDayEntriesNumbers);
   const highestValue = Math.max(...workDayEntriesNumbers);
+  let score = (weeklyCummulative / idealCummulative) * 100;
+  score = Number(score.toFixed(1));
 
   return {
     firstDayOfWeek: weekBoundaries.sunday,
@@ -125,24 +133,24 @@ const getNumberEntriesWeeklyReviewData = async (
     lowestValue,
     highestValue,
     workDayEntriesNumbers,
-    workDayEntriesLength: workDayEntries.length,
     weeklyCummulative,
     idealCummulative,
     idealValue: task.idealValue,
-    unit: task.unit
+    unit: task.unit,
+    score
   };
 };
 
-const getNumberEntriesMonthlyReviewData = async (
+const getNumberEntriesCustomReviewData = async (
   task,
   taskId,
-  monthBoundaries
+  dateBoundaries
 ) => {
   const entries = await NumberEntry.find({
     taskId,
     date: {
-      $gte: new Date(monthBoundaries.firstDay),
-      $lte: new Date(monthBoundaries.lastDay)
+      $gte: new Date(dateBoundaries.firstDay),
+      $lte: new Date(dateBoundaries.lastDay)
     }
   }).sort({ date: 1 });
   if (entries.length === 0) {
@@ -152,28 +160,29 @@ const getNumberEntriesMonthlyReviewData = async (
   const workDayEntries = entries.filter(el => !el.isBreakDay);
   const breakDayEntries = entries.filter(el => el.isBreakDay);
   const workDayEntriesNumbers = workDayEntries.map(el => el.value);
-  const monthlyCummulative = workDayEntriesNumbers.reduce(
-    (total, el) => total + el
-  );
-  const monthlyAverage = monthlyCummulative / workDayEntries.length;
+  const cummulative = workDayEntriesNumbers.reduce((total, el) => total + el);
+  const averageValue = cummulative / workDayEntries.length;
   const idealCummulative = task.idealValue * workDayEntries.length;
   const lowestValue = Math.min(...workDayEntriesNumbers);
   const highestValue = Math.max(...workDayEntriesNumbers);
+  let score = (cummulative / idealCummulative) * 100;
+  score = Number(score.toFixed(1));
 
   return {
-    firstDayOfMonth: monthBoundaries.firstDay,
+    firstDayOfMonth: dateBoundaries.firstDay,
     entries,
     breakDaysEntriesLength: breakDayEntries.length,
     breakDays: task.breakDays,
-    monthlyAverage,
+    averageValue,
     lowestValue,
     highestValue,
-    workDayEntriesLength: workDayEntries.length,
+
     workDayEntriesNumbers,
-    monthlyCummulative,
+    cummulative,
     idealCummulative,
     idealValue: task.idealValue,
-    unit: task.unit
+    unit: task.unit,
+    score
   };
 };
 
@@ -201,6 +210,8 @@ const getMinutesEntriesWeeklyReviewData = async (
   const idealCummulative = task.idealValue * workDayEntries.length;
   const lowestValue = Math.min(...workDaysMinutes);
   const highestValue = Math.max(...workDaysMinutes);
+  let score = (weeklyCummulative / idealCummulative) * 100;
+  score = Number(score.toFixed(1));
 
   return {
     firstDayOfWeek: weekBoundaries.sunday,
@@ -214,20 +225,21 @@ const getMinutesEntriesWeeklyReviewData = async (
     weeklyCummulative,
     idealCummulative,
     idealValue: task.idealValue,
-    unit: task.unit
+    unit: task.unit,
+    score
   };
 };
 
-const getMinutesEntriesMonthlyReviewData = async (
+const getMinutesEntriesCustomReviewData = async (
   task,
   taskId,
-  monthBoundaries
+  dateBoundaries
 ) => {
   const entries = await MinutesEntry.find({
     taskId,
     date: {
-      $gte: new Date(monthBoundaries.firstDay),
-      $lte: new Date(monthBoundaries.lastDay)
+      $gte: new Date(dateBoundaries.firstDay),
+      $lte: new Date(dateBoundaries.lastDay)
     }
   }).sort({ date: 1 });
   if (entries.length === 0) {
@@ -237,26 +249,29 @@ const getMinutesEntriesMonthlyReviewData = async (
   const breakDayEntries = entries.filter(el => el.isBreakDay);
   const workDayEntries = entries.filter(el => !el.isBreakDay);
   const workDaysMinutes = workDayEntries.map(el => el.value);
-  const monthlyCummulative = workDaysMinutes.reduce((total, el) => total + el);
-  const monthlyAverage = monthlyCummulative / workDayEntries.length;
+  const cummulative = workDaysMinutes.reduce((total, el) => total + el);
+  const averageValue = cummulative / workDayEntries.length;
   const idealCummulative = task.idealValue * workDayEntries.length;
   const lowestValue = Math.min(...workDaysMinutes);
   const highestValue = Math.max(...workDaysMinutes);
+  let score = (cummulative / idealCummulative) * 100;
+  score = Number(score.toFixed(1));
 
   return {
-    firstDayOfMonth: monthBoundaries.firstDay,
+    firstDayOfMonth: dateBoundaries.firstDay,
     entries,
     breakDaysEntriesLength: breakDayEntries.length,
     breakDays: task.breakDays,
-    monthlyAverage,
+    averageValue,
     lowestValue,
     highestValue,
     workDayEntries,
-    workDayEntriesLength: workDayEntries.length,
-    monthlyCummulative,
+
+    cummulative,
     idealCummulative,
     idealValue: task.idealValue,
-    unit: task.unit
+    unit: task.unit,
+    score
   };
 };
 
@@ -284,9 +299,10 @@ const getTimeEntriesWeeklyReviewData = async (task, taskId, weekBoundaries) => {
     task.maxTime
   );
 
-  const idealCummalativeScore = 100 * workDayEntries.length;
+  const idealCummulativeScore = 100 * workDayEntries.length;
   const totalScore = timeScores.reduce((total, el) => total + el);
-  const score = Math.round((totalScore / idealCummalativeScore) * 100);
+  let score = (totalScore / idealCummulativeScore) * 100;
+  score = Number(score.toFixed(1));
 
   return {
     firstDayOfWeek: weekBoundaries.sunday,
@@ -301,21 +317,16 @@ const getTimeEntriesWeeklyReviewData = async (task, taskId, weekBoundaries) => {
     idealCummulative: null,
     idealValue: task.idealValue,
     unit: task.unit,
-    timeScores: timeScores,
     score
   };
 };
 
-const getTimeEntriesMonthlyReviewData = async (
-  task,
-  taskId,
-  monthBoundaries
-) => {
+const getTimeEntriesCustomReviewData = async (task, taskId, dateBoundaries) => {
   const entries = await TimeEntry.find({
     taskId,
     date: {
-      $gte: new Date(monthBoundaries.firstDay),
-      $lte: new Date(monthBoundaries.lastDay)
+      $gte: new Date(dateBoundaries.firstDay),
+      $lte: new Date(dateBoundaries.lastDay)
     }
   }).sort({ date: 1 });
   if (entries.length === 0) {
@@ -325,7 +336,7 @@ const getTimeEntriesMonthlyReviewData = async (
   const workDayEntries = entries.filter(el => !el.isBreakDay);
   const breakDayEntries = entries.filter(el => el.isBreakDay);
   const workDaysTimes = workDayEntries.map(el => el.value);
-  const monthlyAverage = computeAverageTime(workDaysTimes);
+  const averageValue = computeAverageTime(workDaysTimes);
   const lowestValue = computeEarliestTime(workDaysTimes);
   const highestValue = computeLatestTime(workDaysTimes);
   const timeScores = computeTimeScores(
@@ -334,37 +345,37 @@ const getTimeEntriesMonthlyReviewData = async (
     task.maxTime
   );
 
-  const idealCummalativeScore = 100 * workDayEntries.length;
+  const idealCummulativeScore = 100 * workDayEntries.length;
   const totalScore = timeScores.reduce((total, el) => total + el);
-  const score = Math.round((totalScore / idealCummalativeScore) * 100);
+  let score = (totalScore / idealCummulativeScore) * 100;
+  score = Number(score.toFixed(1));
 
   return {
-    firstDayOfMonth: monthBoundaries.firstDay,
+    firstDayOfMonth: dateBoundaries.firstDay,
     entries,
     breakDaysEntriesLength: breakDayEntries.length,
     breakDays: task.breakDays,
-    monthlyAverage,
+    averageValue,
     lowestValue,
     highestValue,
     workDayEntries,
-    monthlyCummulative: null,
+    cummulative: null,
     idealCummulative: null,
     idealValue: task.idealValue,
     unit: task.unit,
-    timeScores: timeScores,
     score
   };
 };
 
 module.exports = {
-  getBooleanEntriesMonthlyReviewData,
+  getBooleanEntriesCustomReviewData,
   getBooleanEntriesWeeklyReviewData,
   getNumberEntriesWeeklyReviewData,
-  getNumberEntriesMonthlyReviewData,
+  getNumberEntriesCustomReviewData,
   getMinutesEntriesWeeklyReviewData,
-  getMinutesEntriesMonthlyReviewData,
+  getMinutesEntriesCustomReviewData,
   getTimeEntriesWeeklyReviewData,
-  getTimeEntriesMonthlyReviewData
+  getTimeEntriesCustomReviewData
 };
 /***
  * 
