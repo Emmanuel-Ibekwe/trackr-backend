@@ -44,23 +44,6 @@ const taskSchema = new Schema(
     idealValue: {
       type: Schema.Types.Mixed,
       required: true
-      // validate: {
-      //   validator: function(value) {
-      //     switch (this.type) {
-      //       case "number":
-      //       case "minutes":
-      //         return typeof value === "number";
-      //       case "time":
-      //         return typeof value === "string" && timeRegex.test(value);
-      //       case "boolean":
-      //         return typeof value === "boolean";
-      //       default:
-      //         return false;
-      //     }
-      //   },
-      //   message: props =>
-      //     `Invalid value "${props.value}" for type "${props.path}".`
-      // }
     },
     breakDays: {
       type: [String],
