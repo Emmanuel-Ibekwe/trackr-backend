@@ -12,23 +12,17 @@ const { OAuth2Client } = require("google-auth-library");
 
 dotenv.config();
 
-const {
-  ADMIN_EMAIL,
-  FRONT_END_TESTING_DOMAIN,
-  FRONT_END_PRODUCTION_DOMAIN
-} = process.env;
-
 const signup = async (req, res, next) => {
   try {
     const { name, email, password, picture } = req.body;
-    console.log("req.body", { name, email, password, picture });
+    // console.log("req.body", { name, email, password, picture });
     const newUser = await createUser({
       name,
       email,
       password,
       picture
     });
-    console.log("newUser", newUser);
+    // console.log("newUser", newUser);
 
     const accessToken = await generateToken(
       {
@@ -38,7 +32,7 @@ const signup = async (req, res, next) => {
       "1d",
       process.env.ACCESS_TOKEN_SECRET
     );
-    console.log("accessToken", accessToken);
+    // console.log("accessToken", accessToken);
 
     const refreshToken = await generateToken(
       {
@@ -57,7 +51,7 @@ const signup = async (req, res, next) => {
       type: "sign up"
     });
 
-    console.log("email sent");
+    // console.log("email sent");
 
     res.status(201).json({
       message: "sign up successful",
@@ -71,7 +65,7 @@ const signup = async (req, res, next) => {
       }
     });
 
-    console.log("json sent");
+    // console.log("json sent");
   } catch (error) {
     if (!error.status) {
       error.status = 500;
@@ -190,7 +184,7 @@ const sendResetPasswordEmail = async (req, res, next) => {
     const user = await User.findOne({ email: email });
 
     if (!user) {
-      throw createHttpError.BadRequest("User does not exist.");
+      throw createHttpError.NotFound("User does not exist.");
     }
 
     const randomCode = getRandomSixDigit();
@@ -229,17 +223,16 @@ const validateResetCode = async (req, res, next) => {
 
     const user = await User.findOne({ email: email });
     if (!user) {
-      throw createHttpError.BadRequest("Email does not exist.");
+      throw createHttpError.NotFound("Email does not exist.");
     }
 
     const resetCode = await PasswordResetCode.findOne({ userId: user._id });
     if (!resetCode) {
-      throw createHttpError.BadRequest(
+      throw createHttpError.Gone(
         "Reset code no longer valid. Generate new one."
       );
     }
 
-    console.log("resetCode", resetCode);
     if (resetCode.code !== code) {
       throw createHttpError.BadRequest("Invalid reset code");
     }
@@ -255,9 +248,9 @@ const validateResetCode = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const { resetPassword, email } = req.body;
+    const { newPassword, email } = req.body;
 
-    if (!resetPassword) {
+    if (!newPassword) {
       throw createHttpError.BadRequest("Password not provided.");
     }
 
@@ -268,18 +261,15 @@ const resetPassword = async (req, res, next) => {
     const user = await User.findOne({ email: email });
 
     if (!user) {
-      throw createHttpError.BadRequest("No user has the email provided.");
+      throw createHttpError.NotFound("No user has the email provided.");
     }
 
-    if (isPasswordFalse(resetPassword)) {
+    if (isPasswordFalse(newPassword)) {
       throw createHttpError.BadRequest(
         "password must be atleast 8 characters and contain atleast an uppercase, a lowercase, a number or a special character"
       );
     }
-    const passwordMatches = await bcryptjs.compare(
-      resetPassword,
-      user.password
-    );
+    const passwordMatches = await bcryptjs.compare(newPassword, user.password);
 
     if (passwordMatches) {
       throw createHttpError.BadRequest(
@@ -287,7 +277,7 @@ const resetPassword = async (req, res, next) => {
       );
     }
 
-    const hashedPassword = await bcryptjs.hash(resetPassword, 12);
+    const hashedPassword = await bcryptjs.hash(newPassword, 12);
 
     user.password = hashedPassword;
     const existingUser = await user.save();
