@@ -1,15 +1,17 @@
 const mongoose = require("mongoose");
 const app = require("./app.js");
 const dotenv = require("dotenv");
+const config = require("./config");
 
 dotenv.config();
 const { DATABASE_URL2 } = process.env;
 const PORT = process.env.PORT || 8000;
 
 mongoose
-  .connect(DATABASE_URL2)
+  .connect(config.databaseUrl)
   .then(() => {
     console.log("Connected to Mongodb");
+    console.log("process.env", process.env.NODE_ENV);
   })
   .catch(err => {
     console.log(`Mongodb connection error: ${err}`);
