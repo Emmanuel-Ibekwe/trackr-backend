@@ -5,6 +5,9 @@ const User = require("../models/user.js");
 const validation = require("./../utils/validation.js");
 const { isPasswordFalse } = validation;
 
+const DEFAULT_PICTURE_URL =
+  "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png";
+
 const createUser = async userData => {
   const { name, email, password, picture } = userData;
   // console.log("userData", userData);
@@ -55,9 +58,7 @@ const signInUser = async userData => {
   const user = await User.findOne({ email: email.toLowerCase() }).lean();
 
   if (!user) {
-    throw createHttpError.Unauthorized(
-      "User with this email could not be found."
-    );
+    throw createHttpError.NotFound("User with this email could not be found.");
   }
 
   const passwordMatches = await bcryptjs.compare(password, user.password);
