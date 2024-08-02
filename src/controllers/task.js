@@ -11,7 +11,6 @@ const dotenv = require("dotenv");
 const SpecialUser = require("./../models/specialUser.js");
 
 dotenv.config();
-const { ADMIN_EMAIL } = process.env;
 
 const addTask = async (req, res, next) => {
   try {
