@@ -98,7 +98,8 @@ booleanEntrySchema.pre("save", async function(next) {
   if (lastBooleanEntry) {
     const lastBooleanEntryDate = lastBooleanEntry.date;
     const dayDiff = Math.ceil(
-      (newBooleanEntryDate - lastBooleanEntryDate) / (1000 * 60 * 60 * 24)
+      (newBooleanEntryDate.getTime() - lastBooleanEntryDate.getTime()) /
+        (1000 * 60 * 60 * 24)
     );
 
     // Check if there is a gap

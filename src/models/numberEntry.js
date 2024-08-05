@@ -94,7 +94,8 @@ numberEntrySchema.pre("save", async function(next) {
   if (lastNumberEntry) {
     const lastNumberEntryDate = lastNumberEntry.date;
     const dayDiff = Math.ceil(
-      (newNumberEntryDate - lastNumberEntryDate) / (1000 * 60 * 60 * 24)
+      (newNumberEntryDate.getTime() - lastNumberEntryDate.getTime()) /
+        (1000 * 60 * 60 * 24)
     );
 
     // Check if there is a gap

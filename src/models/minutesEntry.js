@@ -104,7 +104,8 @@ minutesEntrySchema.pre("save", async function(next) {
   if (lastMinutesEntry) {
     const lastMinutesEntryDate = lastMinutesEntry.date;
     const dayDiff = Math.ceil(
-      (newMinutesEntryDate - lastMinutesEntryDate) / (1000 * 60 * 60 * 24)
+      (newMinutesEntryDate.getTime() - lastMinutesEntryDate.getTime()) /
+        (1000 * 60 * 60 * 24)
     );
 
     // Check if there is a gap
