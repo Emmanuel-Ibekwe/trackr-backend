@@ -312,7 +312,7 @@ const editDailyEntry = async (req, res, next) => {
   }
 };
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 8;
 
 const getEntries = async (req, res, next) => {
   try {
