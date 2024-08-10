@@ -1,5 +1,7 @@
 const createHttpError = require("http-errors");
+const puppeteer = require("puppeteer");
 const Task = require("./../models/task.js");
+const User = require("./../models/user.js");
 const {
   getWeekBoundaries,
   isISODateString,
@@ -305,9 +307,77 @@ const getOverallReview = async (req, res, next) => {
   }
 };
 
+const generatePdf = async (req, res, next) => {
+  const { url, authToken } = req.body;
+  const { taskId } = req.params;
+  const userId = req.user.userId;
+
+  if (!url || !authToken) {
+    throw createHttpError.BadRequest("Missing required parameters");
+  }
+
+  try {
+    const user = await User.findById(userId);
+    const task = await Task.findById(taskId);
+
+    if (!user) {
+      throw createHttpError.NotFound("User not found.");
+    }
+    if (!task) {
+      throw createHttpError.NotFound("Task does not exists.");
+    }
+
+    if (userId !== task.userId.toString()) {
+      throw createHttpError.Unauthorized(
+        "User is not authorized to generate pdf of this review"
+      );
+    }
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Set authentication headers
+    await page.setExtraHTTPHeaders({
+      Authorization: `Bearer ${authToken}`
+    });
+
+    // Navigate to the protected page
+    await page.goto(url, { waitUntil: "networkidle2" });
+
+    // Generate the PDF
+    const pdfBuffer = await page.pdf({
+      format: "A4", // Page size
+      margin: {
+        top: "20mm",
+        bottom: "20mm",
+        left: "20mm",
+        right: "20mm"
+      }
+    });
+
+    await browser.close();
+
+    // Send the PDF to the client
+    res.status(200);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${user.name} Review.pdf"`
+    );
+    res.send(pdfBuffer);
+  } catch (error) {
+    if (!error.status) {
+      error.status = 500;
+      error.message = "Error generating the PDF";
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   getWeeklyReview,
   getMonthlyReview,
   getCustomReview,
-  getOverallReview
+  getOverallReview,
+  generatePdf
 };
