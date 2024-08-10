@@ -4,7 +4,8 @@ const {
   getWeeklyReview,
   getMonthlyReview,
   getCustomReview,
-  getOverallReview
+  getOverallReview,
+  generatePdf
 } = require("../controllers/review.js");
 
 const router = express.Router();
@@ -163,7 +164,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/task/{taskId}/weekly-review?date=2024-07-31T19:23:36.134Z:
+ * /api/v1/review/{taskId}/weekly-review?date=2024-07-31T19:23:36.134Z:
  *   get:
  *     summary: Endpoint for fetching the weekly review of a user in a task
  *     description: Endpoint for fetching the weekly review of a user in a task
@@ -195,11 +196,11 @@ const router = express.Router();
  *         description: User is not authorized to add entries in this task.
  */
 
-router.get("/task/:taskId/weekly-review", checkAuth, getWeeklyReview);
+router.get("/review/:taskId/weekly-review", checkAuth, getWeeklyReview);
 
 /**
  * @swagger
- * /api/v1/task/{taskId}/monthly-review?date=2024-07-31T19:23:36.134Z:
+ * /api/v1/review/{taskId}/monthly-review?date=2024-07-31T19:23:36.134Z:
  *   get:
  *     summary: Endpoint for getting the monthly review of a user in a particular task
  *     description: Endpoint for getting the monthly review of a user in a particular task
@@ -232,11 +233,11 @@ router.get("/task/:taskId/weekly-review", checkAuth, getWeeklyReview);
  *
  */
 
-router.get("/task/:taskId/monthly-review", checkAuth, getMonthlyReview);
+router.get("/review/:taskId/monthly-review", checkAuth, getMonthlyReview);
 
 /**
  * @swagger
- * /api/v1/task/{taskId}/custom-review?startingDate=2024-07-31T19:23:36.134Z&stopDate=2024-07-26T23:00:00.000Z:
+ * /api/v1/review/{taskId}/custom-review?startingDate=2024-07-31T19:23:36.134Z&stopDate=2024-07-26T23:00:00.000Z:
  *   get:
  *     summary: Endpoint for fetching the review of a user's task within a custom time frame
  *     description: Endpoint for fetching the review of a user's task within a custom time frame
@@ -275,11 +276,11 @@ router.get("/task/:taskId/monthly-review", checkAuth, getMonthlyReview);
  *
  */
 
-router.get("/task/:taskId/custom-review", checkAuth, getCustomReview);
+router.get("/review/:taskId/custom-review", checkAuth, getCustomReview);
 
 /**
  * @swagger
- * /api/v1/task/{taskId}/overall-review:
+ * /api/v1/review/{taskId}/overall-review:
  *   get:
  *     summary: Endpoint for the fetching the overall review of a user's task
  *     description: Endpoint for the fetching the overall review of a user's task
@@ -307,6 +308,39 @@ router.get("/task/:taskId/custom-review", checkAuth, getCustomReview);
  *
  */
 
-router.get("/task/:taskId/overall-review", checkAuth, getOverallReview);
+router.get("/review/:taskId/overall-review", checkAuth, getOverallReview);
 
+/**
+ * @swagger
+ * /api/v1/review/{taskId}/generate-pdf:
+ *   post:
+ *     summary: Endpoint for generating pdf of the user's review
+ *     description: Endpoint for generating pdf of the user's review
+ *     parameters:
+ *       - in: path
+ *         required: true
+ *         name: taskId
+ *         description: ID of task whose review's pdf is to be generated
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Review pdf generated successfully
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Missing required parameters
+ *       404:
+ *         description: User not found. || Task does not exists.
+ *       401:
+ *         description: User is not authorized to generate pdf of this review
+ *       500:
+ *         description: Error generating the PDF
+ *
+ */
+
+router.post("/review/:taskId/generate-pdf", checkAuth, generatePdf);
 module.exports = router;
